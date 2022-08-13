@@ -9,6 +9,10 @@ var jump = 30*gravity
 var velocity = Vector2()
 var moving = false
 var isJumping = false
+var lookingUp = false
+var pressingDown = false
+var crouchFinish = false
+var lookUpFinish = false
 var right =  Vector2(1, 0)
 var left =  Vector2(-1, 0)
 var grounded1 = true
@@ -34,15 +38,25 @@ func _physics_process(delta):
 	if(Input.is_action_just_pressed("jump") and is_on_floor() == true):
 		velocity.y -= jump
 		isJumping = true
+	if(Input.is_action_pressed("up") and is_on_floor() == true):
+		lookingUp = true
+	else:
+		lookingUp = false
+		lookUpFinish = false
+	if(Input.is_action_pressed("down") and is_on_floor() == true):
+		pressingDown = true
+	else:
+		pressingDown = false
+		crouchFinish = false
 	if(velocity.x <= 4 and velocity.x >= -4 or is_zero_approx(velocity.x) == true):
 		moving = false
 	else:
 		moving = true
-	velocity = move_and_slide(velocity, UP)
+	velocity.y = move_and_slide(velocity, UP).y
 	animationset()
 	directionForAnimationSet()
 #	print(animationReference)
-	animariomPlay()
+	animationPlay()
 
 func animationset():
 	if(isJumping == true and is_on_floor() == false):
@@ -64,6 +78,16 @@ func animationset():
 			animationRef = "balance2"
 		if(direction == left):
 			animationRef = "balance1"
+	elif(lookingUp == true and lookUpFinish == false):
+		animationRef = "lookUp"
+		lookUpFinish = true
+	elif(lookUpFinish ==  true):
+		animationRef = "lookUpSatay"
+	elif(pressingDown == true and crouchFinish == false):
+		animationRef = "crouch"
+		crouchFinish = true
+	elif(crouchFinish == true):
+		animationRef = "crouchStay"
 	else:
 		animationRef = "idle"
 
@@ -75,7 +99,7 @@ func directionForAnimationSet():
 		animationReference = animationRef + "L"
 		sprite.offset = Vector2(spriteOffSet, 0)
 
-func animariomPlay():
+func animationPlay():
 	animationPlayer.play(animationReference)
 
 func _on_groudDectection1_body_exited(body):
