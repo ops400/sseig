@@ -24,6 +24,7 @@ var UP = Vector2(0, -1)
 var animationRef
 var animationReference = "idleR"
 var acceleration = 1
+var codeTimer = Timer.new()
 
 func _physics_process(delta):
 	velocity.y += gravity
@@ -52,16 +53,23 @@ func _physics_process(delta):
 		moving = false
 	else:
 		moving = true
+#	var snap = transform.y * 128 if !isJumping else Vector2.ZERO
+#	velocity = move_and_slide_with_snap(velocity.rotated(rotation), snap, -transform.y, false, 4, PI/3)
+#	velocity = velocity.rotated(-rotation)
 	velocity.y = move_and_slide(velocity, UP).y
 	animationset()
 	directionForAnimationSet()
-#	print(animationReference)
+#	print("g1: ",grounded1)
+#	print("g2: ",grounded2)
 	animationPlay()
+	rotatePlayer()
 
 func animationset():
 	if(isJumping == true and is_on_floor() == false):
 		animationRef = "ball"
-	elif(moving == true):
+	else:
+		animationRef = "idle"
+	if(moving == true):
 		if(velocity.x <= 100 or velocity.x >= -100):
 			animationRef = "run1"
 		if(velocity.x >= 100 and velocity.x <= 255 or velocity.x <= -100 and velocity.x >= -255):
@@ -82,7 +90,7 @@ func animationset():
 		animationRef = "lookUp"
 		lookUpFinish = true
 	elif(lookUpFinish ==  true):
-		animationRef = "lookUpSatay"
+		animationRef = "lookUpStay"
 	elif(pressingDown == true and crouchFinish == false):
 		animationRef = "crouch"
 		crouchFinish = true
@@ -98,6 +106,16 @@ func directionForAnimationSet():
 	if(direction == left):
 		animationReference = animationRef + "L"
 		sprite.offset = Vector2(spriteOffSet, 0)
+
+func rotatePlayer():
+	if(is_on_floor()):
+		var normal: Vector2 = get_floor_normal()
+		var offset: float = deg2rad(90)
+		rotation = normal.angle() + PI/2
+	else:
+		yield(get_tree().create_timer(1), "timeout")
+		rotation = 0
+
 
 func animationPlay():
 	animationPlayer.play(animationReference)
