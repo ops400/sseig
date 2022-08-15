@@ -7,27 +7,31 @@ var speed = 500
 var gravity = 10
 var jump = 30*gravity
 var velocity = Vector2()
-var moving = false
-var isJumping = false
-var lookingUp = false
-var pressingDown = false
-var crouchFinish = false
-var lookUpFinish = false
+var moving: bool = false
+var isJumping: bool = false
+var lookingUp: bool = false
+var pressingDown: bool = false
+var crouchFinish: bool = false
+var lookUpFinish: bool = false
 var right =  Vector2(1, 0)
 var left =  Vector2(-1, 0)
-var grounded1 = true
-var grounded2 = true
+var pushing: bool = false
 var noDirection = Vector2(0, 0)
 var direction = noDirection
 var spriteOffSet = 21
 var UP = Vector2(0, -1)
 var animationRef
 var animationReference = "idleR"
-var acceleration = 1
+var acceleration = 2
 var codeTimer = Timer.new()
 
 func _physics_process(delta):
 	velocity.y += gravity
+	if(is_on_wall() == true and is_on_floor() == true):
+		pushing = true
+		velocity.x -= velocity.x
+	else:
+		pushing = false
 	if(Input.is_action_pressed("right")):
 		velocity.x = min(velocity.x + acceleration, speed)
 		direction = right
@@ -39,6 +43,8 @@ func _physics_process(delta):
 	if(Input.is_action_just_pressed("jump") and is_on_floor() == true):
 		velocity.y -= jump
 		isJumping = true
+	elif(isJumping == true and is_on_floor() == true):
+		isJumping = false
 	if(Input.is_action_pressed("up") and is_on_floor() == true):
 		lookingUp = true
 	else:
@@ -59,29 +65,27 @@ func _physics_process(delta):
 	velocity.y = move_and_slide(velocity, UP).y
 	animationset()
 	directionForAnimationSet()
-#	print("g1: ",grounded1)
-#	print("g2: ",grounded2)
+#	print("g1: ",globalVars.sonicGroundedR)
+#	print("g2: ",globalVars.sonicGroundedL)
 	animationPlay()
 	rotatePlayer()
 
 func animationset():
 	if(isJumping == true and is_on_floor() == false):
 		animationRef = "ball"
-	else:
-		animationRef = "idle"
-	if(moving == true):
+	elif(moving == true):
 		if(velocity.x <= 100 or velocity.x >= -100):
 			animationRef = "run1"
 		if(velocity.x >= 100 and velocity.x <= 255 or velocity.x <= -100 and velocity.x >= -255):
 			animationRef = "run2"
 		if(velocity.x >= 255 and velocity.x <= 500 or velocity.x <= -255 and velocity.x >= -500):
 			animationRef = "run3"
-	elif(grounded1 == false):
+	elif(globalVars.sonicGroundedR == false):
 		if(direction == right):
 			animationRef = "balance1"
 		if(direction == left):
 			animationRef = "balance2"
-	elif(grounded2 == false):
+	elif(globalVars.sonicGroundedL == false):
 		if(direction == right):
 			animationRef = "balance2"
 		if(direction == left):
@@ -96,6 +100,8 @@ func animationset():
 		crouchFinish = true
 	elif(crouchFinish == true):
 		animationRef = "crouchStay"
+	elif(pushing == true):
+		animationRef = "push"
 	else:
 		animationRef = "idle"
 
@@ -116,18 +122,5 @@ func rotatePlayer():
 		yield(get_tree().create_timer(1), "timeout")
 		rotation = 0
 
-
 func animationPlay():
 	animationPlayer.play(animationReference)
-
-func _on_groudDectection1_body_exited(body):
-	grounded1 = false
-
-func _on_groudDectection2_body_exited(body):
-	grounded2 = false
-
-func _on_groudDectection1_body_entered(body):
-	grounded1 = true
-
-func _on_groudDectection2_body_entered(body):
-	grounded2 = true
